@@ -1,8 +1,9 @@
 import matplotlib.pyplot as plt
 from datetime import datetime
-from collections import defaultdict
 from Components.pandas import get_transactions_df
 
+#   Viser et pie chart over udgifter fordelt på kategorier.
+#   Henter data via pandas og bruger matplotlib til visualisering.
 def plot_expenses_by_category():
     df = get_transactions_df()
     expenses = df[df["type"] == "expense"]
@@ -19,6 +20,8 @@ def plot_expenses_by_category():
     plt.tight_layout()
     plt.show()
 
+#   Viser et søjlediagram over udgifter pr. måned.
+#   Summerer data med pandas og viser med matplotlib.
 def plot_monthly_expenses():
     df = get_transactions_df()
     expenses = df[df["type"] == "expense"]
@@ -37,6 +40,7 @@ def plot_monthly_expenses():
     plt.tight_layout()
     plt.show()
 
+#   Viser et søjlediagram over indtægter pr. måned.
 def plot_monthly_income():
     df = get_transactions_df()
     income = df[df["type"] == "income"]
@@ -55,9 +59,9 @@ def plot_monthly_income():
     plt.tight_layout()
     plt.show()
 
-
+#   Viser et søjlediagram med både indtægter og udgifter pr. måned.
+#   Sammenligner de to typer side om side.
 def plot_income_vs_expenses():
-    
     df = get_transactions_df()
     df["month"] = df["date"].dt.to_period("M")
 
@@ -69,11 +73,11 @@ def plot_income_vs_expenses():
     plt.xlabel("Måned")
     plt.xticks(rotation=45)
     plt.tight_layout()
-    plt.show()      
+    plt.show()
 
-
+#   Viser pie chart over udgifter for en specifik måned valgt af brugeren.
+#   Filtrerer DataFrame og grupperer udgifter pr. kategori.
 def plot_expenses_by_category_for_month(month_str):
-
     df = get_transactions_df()
     df["month"] = df["date"].dt.to_period("M").astype(str)
 
