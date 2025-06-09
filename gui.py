@@ -20,8 +20,10 @@ from Components.visualizer import (
 BUDGETS = {}
 
 
-
+#   Viser gennemsnitligt forbrug pr. kategori baseret på alle måneder.
+#   Beregner med pandas og viser resultatet i et messagebox popup.
 def vis_gennemsnitligt_forbrug():
+
     df = get_transactions_df()
     if df.empty:
         messagebox.showinfo("Ingen data", "Der er ingen transaktioner.")
@@ -40,7 +42,10 @@ def vis_gennemsnitligt_forbrug():
 
     messagebox.showinfo("Gennemsnitligt forbrug", tekst)
 
+#   Sammenligner brugerens aktuelle måneds forbrug med gennemsnittet
+#   pr. kategori, og viser forskellen som enten over eller under gennemsnittet.
 def vis_afvigelser_fra_gennemsnit():
+
     df = get_transactions_df()
     if df.empty:
         messagebox.showinfo("Ingen data", "Der er ingen transaktioner.")
@@ -50,11 +55,9 @@ def vis_afvigelser_fra_gennemsnit():
     df["month"] = df["date"].dt.to_period("M")
     expenses = df[df["type"] == "expense"]
 
-    # Gennemsnitligt forbrug pr. kategori
     monthly = expenses.groupby(["month", "category"])["amount"].sum()
     mean_per_category = monthly.groupby("category").mean()
 
-    # Aktuel måned
     this_month = pd.Timestamp.now().to_period("M")
     current_month_data = monthly.loc[this_month] if this_month in monthly.index.levels[0] else pd.Series()
 
@@ -62,7 +65,6 @@ def vis_afvigelser_fra_gennemsnit():
         messagebox.showinfo("Ingen data", "Ingen udgifter registreret i denne måned.")
         return
 
-    # Sammenlign og byg tekst
     tekst = f"Forbrug i {this_month} sammenlignet med gennemsnit:\n\n"
     for kategori, aktuelt in current_month_data.items():
         gennemsnit = mean_per_category.get(kategori, 0)
@@ -72,8 +74,9 @@ def vis_afvigelser_fra_gennemsnit():
 
     messagebox.showinfo("Afvigelse fra gennemsnit", tekst)
 
+#   Tjekker om brugerens forbrug i hver kategori overstiger den definerede budgetgrænse.
+#   (OBS: Funktion er ikke færdigimplementeret – advarsler vises ikke endnu.)
 def check_budget_status():
-    
 
     df = get_transactions_df()
     expenses = df[df["type"] == "expense"]
@@ -82,14 +85,19 @@ def check_budget_status():
     for category, forbrug in totals.items():
         grænse = BUDGETS.get(category)
         if grænse and forbrug > grænse:
-            ...
+            ...  
 
+    # Ekstra analyse (vises pt. kun i konsol)
     df["month"] = df["date"].dt.to_period("M")
     monthly = df[df["type"] == "expense"].groupby(["month", "category"])["amount"].sum()
     mean_per_category = monthly.groupby("category").mean()
     print(mean_per_category)
 
+
+#   Henter data fra inputfelter i GUI, validerer og gemmer som ny transaktion i CSV.
+#   Viser fejlbeskeder hvis input er ugyldigt.
 def add_transaction():
+
     data = {
         "date": entry_date.get(),
         "type": var_type.get(),
@@ -99,7 +107,7 @@ def add_transaction():
 
     try:
         data["amount"] = float(data["amount"])
-        datetime.strptime(data["date"], "%Y-%m-%d")  
+        datetime.strptime(data["date"], "%Y-%m-%d")
     except ValueError:
         messagebox.showerror("Fejl", "Dato eller beløb er ugyldigt.")
         return
@@ -109,8 +117,10 @@ def add_transaction():
     entry_category.delete(0, tk.END)
     entry_amount.delete(0, tk.END)
 
-
+#   Viser alle transaktioner fra CSV i tekstfelt i GUI'en.
+#   Hver transaktion vises som en formateret linje.
 def show_transactions():
+
     transactions = load_transactions()
     text_display.delete("1.0", tk.END)
 
@@ -122,8 +132,13 @@ def show_transactions():
         line = f"{t['date']} | {t['type']:7} | {t['category']:10} | {float(t['amount']):.2f} kr\n"
         text_display.insert(tk.END, line)
 
-
+#   Viser en opsummering af økonomien:
+#   - Samlet indtægt
+#   - Samlet udgift
+#   - Balance
+#   Bruger `calculate_totals()` til at hente data (via pandas).
 def show_summary():
+
     transactions = load_transactions()
     if not transactions:
         messagebox.showinfo("Ingen data", "Der er ingen transaktioner endnu.")
@@ -137,6 +152,7 @@ def show_summary():
         f"Balance:    {balance:.2f} kr"
     )
     messagebox.showinfo("Økonomisk oversigt", summary_text)
+
 
 
 window = tk.Tk()
@@ -192,7 +208,7 @@ entry_amount.grid(row=4, column=1, padx=5, pady=5)
 ttk.Button(input_frame, text="Gem transaktion", command=add_transaction).grid(row=5, column=0, columnspan=2, pady=(20, 0))
 
 
-# Scrollable frame setup
+
 overview_canvas = tk.Canvas(tab_overview)
 overview_scrollbar = ttk.Scrollbar(tab_overview, orient="vertical", command=overview_canvas.yview)
 overview_scrollable_frame = ttk.Frame(overview_canvas)
@@ -239,15 +255,17 @@ month_dropdown = ttk.Combobox(graphs_frame, textvariable=selected_month, state="
 month_dropdown['values'] = get_available_months()
 month_dropdown.pack()
 
-# --- Funktion til at vise pie chart for valgt måned ---
+ #  Viser pie chart over udgifter i den valgte måned fra dropdown.
+ #  Bruger `plot_expenses_by_category_for_month()` fra visualizer.
 def show_filtered_pie():
+
     month = selected_month.get()
     if not month:
-        messagebox.showwarning("Ingen måned valgt", "Vælg en måned først.") 
+        messagebox.showwarning("Ingen måned valgt", "Vælg en måned først.")
         return
     plot_expenses_by_category_for_month(month)
 
-# --- Knap til at aktivere funktionen ---
+
 ttk.Button(graphs_frame, text="Vis udgifter for valgt måned", command=show_filtered_pie).pack(pady=5)
 
 ttk.Label(overview_scrollable_frame, text="Opdater budget for kategori:", font=("Helvetica", 12)).pack(pady=(15, 5))
@@ -258,7 +276,10 @@ ttk.Entry(overview_scrollable_frame, textvariable=budget_category, width=20).pac
 budget_amount = tk.StringVar()
 ttk.Entry(overview_scrollable_frame, textvariable=budget_amount, width=20).pack(pady=2)
 
+ #  Opdaterer budget for en valgt kategori.
+ #  Validerer at beløb er et tal og viser en bekræftelse.
 def update_budget():
+
     cat = budget_category.get()
     try:
         amount = float(budget_amount.get())
@@ -270,7 +291,10 @@ def update_budget():
         messagebox.showerror("Fejl", "Beløbet skal være et tal.")
 
 ttk.Button(overview_scrollable_frame, text="Gem budget", command=update_budget).pack(pady=5)
+
+#  Viser alle gemte budgetgrænser i et messagebox-vindue.
 def show_current_budgets():
+
     if not BUDGETS:
         messagebox.showinfo("Ingen budgetter", "Der er ingen budgetter endnu.")
         return
